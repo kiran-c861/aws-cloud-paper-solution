@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Serverless App</title>
+</head>
+<body>
+
+<h2>Store Data</h2>
+<input id="id" placeholder="ID">
+<input id="name" placeholder="Name">
+<button onclick="createData()">Create</button>
+
+<h2>Get Data</h2>
+<input id="readId" placeholder="ID">
+<button onclick="getData()">Read</button>
+
+<pre id="output"></pre>
+
+<script>
+const API_URL = "YOUR_API_URL";
+
+function createData() {
+    fetch(API_URL + "/create", {
+        method: "POST",
+        body: JSON.stringify({
+            action: "create",
+            id: document.getElementById("id").value,
+            name: document.getElementById("name").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => document.getElementById("output").innerText = JSON.stringify(data));
+}
+
+function getData() {
+    fetch(API_URL + "/read", {
+        method: "POST",
+        body: JSON.stringify({
+            action: "read",
+            id: document.getElementById("readId").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => document.getElementById("output").innerText = JSON.stringify(data));
+}
+</script>
+
+</body>
+</html>
