@@ -1,49 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Serverless App</title>
+  <title>Student Registry</title>
 </head>
 <body>
 
-<h2>Store Data</h2>
-<input id="id" placeholder="ID">
-<input id="name" placeholder="Name">
-<button onclick="createData()">Create</button>
+  <h2>Student Registry</h2>
 
-<h2>Get Data</h2>
-<input id="readId" placeholder="ID">
-<button onclick="getData()">Read</button>
+  <label>Name:</label><br>
+  <input id="name" type="text" placeholder="e.g. Kiran" size="30"><br><br>
 
-<pre id="output"></pre>
+  <label>Reg No:</label><br>
+  <input id="regNo" type="text" placeholder="e.g. 2021CS001" size="30"><br><br>
 
-<script>
-const API_URL = "YOUR_API_URL";
+  <button onclick="createStudent()">Create</button>
+  <button onclick="readStudent()">Read</button>
+  <button onclick="updateStudent()">Update</button>
+  <button onclick="deleteStudent()">Delete</button>
 
-function createData() {
-    fetch(API_URL + "/create", {
-        method: "POST",
-        body: JSON.stringify({
-            action: "create",
-            id: document.getElementById("id").value,
-            name: document.getElementById("name").value
-        })
-    })
-    .then(res => res.json())
-    .then(data => document.getElementById("output").innerText = JSON.stringify(data));
-}
+  <br><br>
+  <div id="status"></div>
 
-function getData() {
-    fetch(API_URL + "/read", {
-        method: "POST",
-        body: JSON.stringify({
-            action: "read",
-            id: document.getElementById("readId").value
-        })
-    })
-    .then(res => res.json())
-    .then(data => document.getElementById("output").innerText = JSON.stringify(data));
-}
-</script>
+  <script>
+    const API_URL = 'https://b62gz776m0.execute-api.ap-south-1.amazonaws.com/prod/my-resource';
+
+    function getName()  { return document.getElementById('name').value.trim(); }
+    function getRegNo() { return document.getElementById('regNo').value.trim(); }
+    function show(msg)  { document.getElementById('status').innerText = msg; }
+
+    // Parses API Gateway response correctly
+    function parse(data) {
+      if (data.body) return JSON.parse(data.body);
+      return data;
+    }
+
+    async function createStudent() {
+      if (!getName() || !getRegNo()) return show('Fill both fields!');
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: getName(), regNo: getRegNo() })
+      });
+      const result = parse(await res.json());
+      show(result.message || result);
+    }
+
+    async function readStudent() {
+      if (!getRegNo()) return show('Enter Reg No!');
+      const res = await fetch(`${API_URL}?regNo=${getRegNo()}`);
+      const result = parse(await res.json());
+      if (res.ok && result.name) {
+        show('Name: ' + result.name + ' | Reg No: ' + result.regNo);
+        document.getElementById('name').value = result.name;
+      } else {
+        show(result.message || 'Not found');
+      }
+    }
+
+    async function updateStudent() {
+      if (!getName() || !getRegNo()) return show('Fill both fields!');
+      const res = await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: getName(), regNo: getRegNo() })
+      });
+      const result = parse(await res.json());
+      show(result.message || result);
+    }
+
+    async function deleteStudent() {
+      if (!getRegNo()) return show('Enter Reg No!');
+      const res = await fetch(`${API_URL}?regNo=${getRegNo()}`, { method: 'DELETE' });
+      const result = parse(await res.json());
+      show(result.message || result);
+      if (res.ok) {
+        document.getElementById('name').value = '';
+        document.getElementById('regNo').value = '';
+      }
+    }
+  </script>
 
 </body>
 </html>
